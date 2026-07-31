@@ -57,6 +57,17 @@ for i in range(0,l):
 
 print()
 print()
+
+def normal_decode(sec: list):
+    # sec = [(i-0xE0100) for i in sec]
+    return [
+        chr(sec[i]*0x10000 + sec[i+1]*0x100 + sec[i+2])
+        for i in range(0, len(sec), 3)
+    ]
+
+def ascii_decode(sec: list):
+    return [chr(i) for i in sec]
+
 # print(phase)
 # print([[format(j, '04X') for j in i] for i in phase])
 print("解码结果:")
@@ -68,14 +79,22 @@ for i in range(len(phase)):
     # [0, 0xFF, 0xFF] => 0x00 FF FF => a*0x10000 + b*0x100 + c
     print(f"第 {i+1} 段密文:")
     sec = phase[i]
-    if ((len(sec) % 3) != 0):
-        print(term.red("密文损坏"))
-        print("密文 UniCode:", sec)
-        continue
-
     sec = [(i-0xE0100) for i in sec]
-    ori = [
-        chr(sec[i]*0x10000 + sec[i+1]*0x100 + sec[i+2])
-        for i in range(0, len(sec), 3)
-    ]
-    print((term.white_on_green) + term.bold("".join(ori)))
+
+    try:
+        if ((len(sec) % 3) != 0):
+            raise ValueError("密文损坏")
+
+        ori = [
+            chr(sec[i]*0x10000 + sec[i+1]*0x100 + sec[i+2])
+            for i in range(0, len(sec), 3)
+        ]
+        print(term.white_on_green(term.bold("".join(ori))))
+    except:
+        print(term.red("解码失败,密文损坏"))
+        print("解码密文:", sec)
+        print("密文 UniCode:", [('U+'+(format(i+0xE0100, '04X'))) for i in sec])
+        print("尝试使用 ASCII 解码")
+        print(term.yellow_on_green("".join(ascii_decode(sec))))
+
+    print("\n===",end="\n")
